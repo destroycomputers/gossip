@@ -1,0 +1,3 @@
+{:at-least-one "Min parameter value is 1, supplied %s."
+ :at-most-five "Max parameter value is 5, supplied %s."
+ :contiguous "Parameters must be contiguous, missing parameters are: %s."}
