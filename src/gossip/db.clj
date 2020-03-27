@@ -31,6 +31,19 @@
   (-> (all table)
       rand-nth))
 
+(defn random'
+  "Returns a random template from the DB.
+  Can be supplied with additional filtering function that is applied
+  before the random element is selected. If in the result of filtering
+  no elements is left, the random element will be chosen from the initial,
+  non-filtered, set."
+  [table & {filter-by :filter-by :or {filter-by (constantly true)}}]
+  (let [rows (all table)]
+    (-> rows
+        (->> (filterv filter-by))
+        (as-> vs (if (empty? vs) rows vs))
+        rand-nth)))
+
 (defn insert
   "Inserts a single row into a DB."
   [table template]

@@ -13,12 +13,12 @@
 
 ;;
 ;; TODO
-;; 1. [WIP] If possible, add supplied/random usernames distinction
+;; 1. [DONE] If possible, add supplied/random usernames distinction
 ;;    (prefixes like u:username for supplied and r:username for random?).
-;; 2. [SEMIDONE] Refactor/decompose further.
+;; 2. [WIP] Refactor/decompose further.
 ;; 3. [WIP] Add tests/specs.
 ;; 4. Consider SQLite instead of file to store templates.
-;; 5. If (1) implemented, add possibility to choose template with matching
+;; 5. [DONE] If (1) implemented, add possibility to choose template with matching
 ;;    number of supplied parameters.
 ;; 6. Do not return 500/exception details on exceptions.
 ;; 7. Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
@@ -48,9 +48,12 @@
 (defn rng
   [table]
   (fn [req]
-    (u/response
-     (-> (db/random table)
-         (template/populate (u/from-query* req))))))
+    (let [m (u/from-query* req)
+          c (u/count-by #(-> % (string/starts-with? "r:") not)
+                        (vals m))]
+      (u/response
+       (-> (db/random' table :filter-by #(>= (template/greatest %) c))
+           (template/populate (u/from-query* req)))))))
 
 (defn all
   [table]

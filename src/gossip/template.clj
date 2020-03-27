@@ -5,18 +5,23 @@
 
 (declare select-params)
 
+(defn- user-provider
+  [m k]
+  (if-let [name (get m k)]
+    (-> name
+        (string/replace #"^r:" "")
+        (as-> name
+              (if (string/starts-with? name "@")
+                name
+                (str "@" name))))
+    ""))
+
 (defn populate
   "Populates placeholders with user names from a supplied map."
   [template m]
-  (letfn [(user-provider [k]
-            (if-let [name (get m k)]
-              (if (string/starts-with? name "@")
-                name
-                (str "@" name))
-              ""))]
     (string/replace template
                     param-rx
-                    #(-> % second keyword user-provider))))
+                    #(->> % second keyword (user-provider m))))
 
 (defn- v:analyse
   [ps]
@@ -68,6 +73,14 @@
        (map last)
        (map #(Long/parseLong %))
        (into (sorted-set))))
+
+(defn greatest
+  "Finds the greatest parameter value of this template."
+  [template]
+  (-> template
+      select-params
+      (as-> params
+            (apply max (conj params 0)))))
 
 (defn check-errors [template]
   (-> template

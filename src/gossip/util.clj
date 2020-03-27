@@ -55,3 +55,9 @@
     (map #(string/split % #"=") it)
     (into {} it)
     (walk/keywordize-keys it)))
+
+(defn count-by
+  [pred coll]
+  (reduce #(if (pred %2) (inc %1) %1)
+          0
+          coll))
