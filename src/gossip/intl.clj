@@ -41,7 +41,7 @@
       io/file
       from-dir))
 
-(defn- load-resource
+(defmacro load-resource
   [name]
   (apply merge-with merge (from-resource name)))
 

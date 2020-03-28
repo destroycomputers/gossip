@@ -52,8 +52,9 @@
           c (u/count-by #(-> % (string/starts-with? "r:") not)
                         (vals m))]
       (u/response
-       (-> (db/random' table :filter-by #(>= (template/greatest %) c))
-           (template/populate (u/from-query* req)))))))
+       (-> table
+           (db/random' :filter-by #(>= (template/greatest %) c))
+           (template/populate m))))))
 
 (defn all
   [table]
