@@ -49,12 +49,11 @@
 (defn from-query*
   "Retrieves a map of {key value} from ?key=value&key=value query-string."
   [req]
-  (as-> req it
-    (:query-string it)
-    (string/split it #"&")
-    (map #(string/split % #"=") it)
-    (into {} it)
-    (walk/keywordize-keys it)))
+  (-> (:query-string req)
+      (some-> (string/split #"&")
+              (->> (map #(string/split % #"="))
+                   (into {}))
+              (walk/keywordize-keys))))
 
 (defn count-by
   [pred coll]

@@ -21,7 +21,7 @@
 ;; 5. [DONE] If (1) implemented, add possibility to choose template with matching
 ;;    number of supplied parameters.
 ;; 6. Do not return 500/exception details on exceptions.
-;; 7. Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
+;; 7. [WIP] Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
 
 ;; Route handlers
 
