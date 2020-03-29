@@ -30,11 +30,9 @@
   (let [template (u/from-query req)]
     (if-let [errors (seq (template/check-errors template))]
       (u/response
-       (str (intl/render :gossip.generic/errors
-                         :locale ::intl/en_GB)
+       (str (intl/render :gossip.generic/errors)
             ": "
-            (intl/render-join errors
-                              :locale ::intl/en_GB)))
+            (intl/render-join errors)))
       (do
         (db/insert ::db/gossips template)
         (u/response "Gossip saved.")))))
@@ -74,16 +72,23 @@
   (GET "/uwu" [] uwu)
   (r/not-found "404 Not Found"))
 
-;; Main entry point.
+(defn localise
+  [handler]
+  (fn [req]
+    (binding [intl/*locale* ::intl/en_GB]
+      (handler req))))
 
 (defn run-app [port]
   (-> (routes app)
+      (localise)
       (run-server {:port port})))
 
 (declare server-stop)
 (defstate server-stop
   :start (run-app 80)
   :stop (server-stop))
+
+;; Main entry point.
 
 (defn -main [& _args]
   (m/start))
