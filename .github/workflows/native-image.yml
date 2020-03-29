@@ -26,9 +26,6 @@ jobs:
         tar -xzf graalvm-ce.tar.gz
         mv graalvm-ce-java11-20.0.0 graalvm-ce
         graalvm-ce/bin/gu install native-image
-        sudo apt update
-        sudo apt install build-essential
-        sudo apt install libz-dev
     
     - name: Compile UberJAR
       run: |
@@ -38,7 +35,7 @@ jobs:
     - name: Compile Native Image
       run: |
         cd target/uberjar
-        ../../graalvm-ce/bin/native-image --initialize-at-build-time --allow-incomplete-classpath --no-fallback -H:+ReportExceptionStackTraces --report-unsupported-elements-at-runtime -jar ./gossip-0.1.0-SNAPSHOT-standalone.jar
+        ../../graalvm-ce/bin/native-image --initialize-at-build-time --enable-https --allow-incomplete-classpath --no-fallback -H:+ReportExceptionStackTraces --report-unsupported-elements-at-runtime -jar ./gossip-0.1.0-SNAPSHOT-standalone.jar
 
     - name: Uploading the artifact
       uses: actions/upload-artifact@v1.0.0
