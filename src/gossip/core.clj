@@ -47,7 +47,7 @@
   [table]
   (fn [req]
     (let [m (u/from-query* req)
-          c (u/count-by #(-> % (string/starts-with? "r:") not)
+          c (u/count-if #(-> % (string/starts-with? "r:") not)
                         (vals m))]
       (u/response
        (-> table

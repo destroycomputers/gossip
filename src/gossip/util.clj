@@ -29,10 +29,9 @@
 (defn from-query
   "Retrieves a single value from ?key=value query-string."
   [req]
-  (-> req
-      :query-string
-      (string/split #"=" 2)
-      second
+  (-> (:query-string req)
+      (some-> (string/split #"=" 2)
+              second)
       (or "")
       codec/url-decode))
 
@@ -49,13 +48,16 @@
 (defn from-query*
   "Retrieves a map of {key value} from ?key=value&key=value query-string."
   [req]
-  (-> (:query-string req)
-      (some-> (string/split #"&")
-              (->> (map #(string/split % #"="))
-                   (into {}))
-              (walk/keywordize-keys))))
+  (letfn [(url-decode [[k v]] [k (codec/url-decode v)])]
+    (-> (:query-string req)
+        (some-> (string/split #"&")
+                (->> (map #(string/split % #"="))
+                     (map url-decode)
+                     (into {}))
+                (walk/keywordize-keys))
+        (or {}))))
 
-(defn count-by
+(defn count-if
   [pred coll]
   (reduce #(if (pred %2) (inc %1) %1)
           0
