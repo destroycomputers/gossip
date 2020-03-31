@@ -3,6 +3,7 @@
             [org.httpkit.server :refer [run-server]]
             [compojure.core :refer [defroutes routes GET]]
             [compojure.route :as r]
+            [ring.util.response :as resp]
             [mount.core :as m :refer [defstate]]
             [gossip.intl :as intl]
             [gossip.util :as u]
@@ -78,8 +79,18 @@
     (binding [intl/*locale* ::intl/en_GB]
       (handler req))))
 
+(defn handle-5xx
+  [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch Throwable t
+        (-> (resp/response "500 Internal Server Error")
+            (resp/status 500))))))
+
 (defn run-app [port]
   (-> (routes app)
+      (handle-5xx)
       (localise)
       (run-server {:port port})))
 

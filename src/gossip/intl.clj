@@ -56,8 +56,7 @@
 ;;         * Use-case: Ranges in ::contiguous message.
 (defn render
   [v & {locale :locale :or {locale *locale*}}]
-  (let [key (if (sequential? v) (first v) v)
-        args (if (sequential? v) (rest v) [])]
+  (let [[key & args] (if (sequential? v) v [v])]
     (-> messages
         (get locale)
         (get key)
