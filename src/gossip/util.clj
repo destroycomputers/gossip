@@ -48,11 +48,11 @@
 (defn from-query*
   "Retrieves a map of {key value} from ?key=value&key=value query-string."
   [req]
-  (letfn [(url-decode [[k v]] [k (codec/url-decode v)])]
+  (letfn [(val-decode [[k v]] [k (codec/url-decode v)])]
     (-> (:query-string req)
         (some-> (string/split #"&")
                 (->> (map #(string/split % #"="))
-                     (map url-decode)
+                     (map val-decode)
                      (into {}))
                 (walk/keywordize-keys))
         (or {}))))

@@ -21,7 +21,7 @@
 ;; 4. Consider SQLite instead of file to store templates.
 ;; 5. [DONE] If (1) implemented, add possibility to choose template with matching
 ;;    number of supplied parameters.
-;; 6. Do not return 500/exception details on exceptions.
+;; 6. [DONE] Do not return 500/exception details on exceptions.
 ;; 7. [WIP] Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
 
 ;; Route handlers
@@ -86,7 +86,8 @@
       (handler req)
       (catch Throwable t
         (-> (resp/response "500 Internal Server Error")
-            (resp/status 500))))))
+            (resp/status 500)
+            (resp/content-type "text/plain"))))))
 
 (defn run-app [port]
   (-> (routes app)
