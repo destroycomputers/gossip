@@ -57,6 +57,10 @@
                 (walk/keywordize-keys))
         (or {}))))
 
+(s/fdef from-query*
+  :args ::request
+  :ret map?)
+
 (defn count-if
   [pred coll]
   (reduce #(if (pred %2) (inc %1) %1)

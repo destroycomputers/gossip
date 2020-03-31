@@ -8,7 +8,8 @@
   (testing "inputs with several parameters are parsed as single value."
     (is (= "value&k=v" (u/from-query {:query-string "q=value&k=v"}))))
   (testing "nil inputs return empty string."
-    (is (= "" (u/from-query {}))))
+    (is (= "" (u/from-query {})))
+    (is (= "" (u/from-query nil))))
   (testing "inputs are decoded."
     (is (= "v v" (u/from-query {:query-string "q=v%20v"})))))
 
@@ -19,8 +20,9 @@
     (is (= {:a "va" :b "vb"}
            (u/from-query* {:query-string "a=va&b=vb"}))))
   (testing "nil inputs return empty map."
-    (is (= {} (u/from-query* {}))))
-  (testing "inputs are decodes."
+    (is (= {} (u/from-query* {})))
+    (is (= {} (u/from-query* nil))))
+  (testing "inputs are decoded."
     (is (= {:k "v v"}
            (u/from-query* {:query-string "k=v%20v"})))
     (is (= {:k "v&v=v"}
