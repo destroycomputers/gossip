@@ -14,15 +14,9 @@
 
 ;;
 ;; TODO
-;; 1. [DONE] If possible, add supplied/random usernames distinction
-;;    (prefixes like u:username for supplied and r:username for random?).
-;; 2. [WIP] Refactor/decompose further.
-;; 3. [WIP] Add tests/specs.
-;; 4. Consider SQLite instead of file to store templates.
-;; 5. [DONE] If (1) implemented, add possibility to choose template with matching
-;;    number of supplied parameters.
-;; 6. [DONE] Do not return 500/exception details on exceptions.
-;; 7. [WIP] Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
+;; 1. [WIP] Add tests/specs.
+;; 2. [WIP] Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
+;;
 
 ;; Route handlers
 
@@ -45,6 +39,7 @@
        uwu/twanswate)))
 
 (defn rng
+  "Helper that returns random element of the resource and populates template vars."
   [table]
   (fn [req]
     (let [m (u/from-query* req)
@@ -56,6 +51,7 @@
            (template/populate m))))))
 
 (defn all
+  "Helper that implements `list' operation on a resource."
   [table]
   (fn [_req]
     (u/response
@@ -74,12 +70,15 @@
   (r/not-found "404 Not Found"))
 
 (defn localise
-  [handler]
+  "Localisation middleware, sets up given locale as a locale of the request."
+  [handler locale]
   (fn [req]
-    (binding [intl/*locale* ::intl/en_GB]
+    (binding [intl/*locale* locale]
       (handler req))))
 
 (defn handle-5xx
+  "Unhandled exception catching middleware. If unhandled exception occurs
+  catches it and returns HTTP 500 Internal Server Error."
   [handler]
   (fn [req]
     (try
@@ -89,15 +88,17 @@
             (resp/status 500)
             (resp/content-type "text/plain"))))))
 
-(defn run-app [port]
+(defn run-app
+  "Runs the application server at a given port."
+  [port locale]
   (-> (routes app)
       (handle-5xx)
-      (localise)
+      (localise locale)
       (run-server {:port port})))
 
 (declare server-stop)
 (defstate server-stop
-  :start (run-app 80)
+  :start (run-app 80 ::intl/en_GB)
   :stop (server-stop))
 
 ;; Main entry point.

@@ -39,8 +39,7 @@
   non-filtered, set."
   [table & {filter-by :filter-by :or {filter-by (constantly true)}}]
   (let [rows (all table)]
-    (-> rows
-        (->> (filterv filter-by))
+    (-> (filterv filter-by rows)
         (as-> vs (if (empty? vs) rows vs))
         rand-nth)))
 

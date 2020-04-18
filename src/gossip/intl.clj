@@ -2,48 +2,42 @@
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
             [clojure.string :as string]
-            [mount.core :refer [defstate]])
-  (:import java.io.PushbackReader))
+            [mount.core :refer [defstate]]
+            [gossip.util :as u]))
 
 (def ^:dynamic *locale*)
 
-;; FIXME: refactor this ugliness.
-(defn- locale&ns-from-uri [uri]
-  (let [components (-> uri .getRawPath (string/split #"/"))
-        locale (->> components first (keyword "gossip.intl"))
-        file-name (last components)]
-    (when (string/ends-with? file-name ".edn")
-      (let [ns-components (subvec components 1 (dec (count components)))
-            complete-ns (conj ns-components
-                              (subs file-name 0 (- (count file-name)
-                                                   4)))
-            ns-keyword (->> complete-ns (string/join "."))]
-        [locale ns-keyword]))))
+(def ^:private current-namespace (namespace ::ns))
 
-;; FIXME: refactor this ugliness.
+(defn- from-file
+  [f base]
+  (let [uri (u/relative-uri f base)
+        components (u/uri-components uri)]
+    (if-let [[locale-str ns-components file-name] (u/decomp components)]
+      (when (string/ends-with? file-name ".edn")
+        (let [locale (keyword current-namespace locale-str)
+              ns-vec (conj ns-components (u/trim-extension file-name))
+              ns-str (string/join "." ns-vec)]
+          [locale ns-str])))))
+
 (defn- from-dir
   [dir]
   (for [f (file-seq dir)]
-    (when-let [[locale ns-locale]
-               (->> f
-                    .toURI
-                    (.relativize (.toURI dir))
-                    locale&ns-from-uri)]
+    (when-let [[locale ns-locale] (from-file f dir)]
       {locale
-       (into {}
-             (map (fn [[k v]] [(->> k name (keyword ns-locale)) v]))
-             (-> f io/reader (PushbackReader.) edn/read))})))
+       (u/map-keys #(keyword ns-locale (name %))
+                   (edn/read-string (slurp f)))})))
 
-(defn- from-resource
+(defn- from-resource-dir
   [dir]
   (-> dir
       io/resource
       io/file
       from-dir))
 
-(defmacro load-resource
+(defmacro ^:private load-resource
   [name]
-  (apply merge-with merge (from-resource name)))
+  (apply merge-with merge (from-resource-dir name)))
 
 (declare messages)
 (defstate messages
