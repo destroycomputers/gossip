@@ -43,6 +43,20 @@
         (as-> vs (if (empty? vs) rows vs))
         rand-nth)))
 
+(defn random-with-idx
+  "Returns a random template and its index from the DB.
+  Can be supplied with additional filtering function that is applied
+  before the random element is selected. If in the result of filtering
+  no elements is left, the random element will be chosen from the initial,
+  non-filtered, set."
+  [table & {filter-by :filter-by :or {filter-by (constantly true)}}]
+  (let [rows (all table)]
+    (-> (filterv filter-by rows)
+        (as-> vs (if (empty? vs) rows vs))
+        (as-> vs
+          (let [idx (-> vs count rand-int)]
+            [idx (nth vs idx)])))))
+
 (defn insert
   "Inserts a single row into a DB."
   [table template]

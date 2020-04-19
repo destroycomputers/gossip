@@ -20,6 +20,8 @@
 
 ;; Route handlers
 
+(def comeback-index (atom 0))
+
 (defn gossip-add
   [req]
   (let [template (u/from-query req)]
@@ -40,15 +42,19 @@
 
 (defn rng
   "Helper that returns random element of the resource and populates template vars."
-  [table]
-  (fn [req]
-    (let [m (u/from-query* req)
-          c (u/count-if #(-> % (string/starts-with? "r:") not)
-                        (vals m))]
-      (u/response
-       (-> table
-           (db/random' :filter-by #(>= (template/greatest %) c))
-           (template/populate m))))))
+  ([table] (rng table (constantly 1)))
+  ([table action]
+   (fn [req]
+     (let [m (u/from-query* req)
+           c (u/count-if #(-> % (string/starts-with? "r:") not)
+                         (vals m))]
+       (u/response
+         (-> table
+             (db/random-with-idx :filter-by #(>= (template/greatest %) c))
+             (as-> [idx tmpl]
+               (do
+                 (action idx tmpl)
+                 (template/populate tmpl m)))))))))
 
 (defn all
   "Helper that implements `list' operation on a resource."
@@ -58,14 +64,21 @@
      (->> (db/all table)
           (string/join "\n")))))
 
+(defn comeback-reply
+  [req]
+  (u/response
+    (-> (db/all ::db/comebacks)
+        (nth @comeback-index))))
+
 (defroutes app
   (GET "/gossip" [] (all ::db/gossips))
   (GET "/gossip/rng" [] (rng ::db/gossips))
   (GET "/gossip/add" [] gossip-add)
   (GET "/insult" [] (all ::db/insults))
-  (GET "/insult/rng" [] (rng ::db/insults))
+  (GET "/insult/rng" [] (rng ::db/insults (fn [idx _] (swap! comeback-index (constantly idx)))))
   (GET "/comeback" [] (all ::db/comebacks))
   (GET "/comeback/rng" [] (rng ::db/comebacks))
+  (GET "/comeback/rep" [] comeback-reply)
   (GET "/uwu" [] uwu)
   (r/not-found "404 Not Found"))
 
@@ -84,6 +97,7 @@
     (try
       (handler req)
       (catch Throwable t
+        (println t)
         (-> (resp/response "500 Internal Server Error")
             (resp/status 500)
             (resp/content-type "text/plain"))))))
