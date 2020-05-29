@@ -79,6 +79,8 @@
   (GET "/comeback" [] (all ::db/comebacks))
   (GET "/comeback/rng" [] (rng ::db/comebacks))
   (GET "/comeback/rep" [] comeback-reply)
+  (GET "/cats" [] (all ::db/cats))
+  (GET "/cats/rng" [] (rng ::db/cats))
   (GET "/uwu" [] uwu)
   (r/not-found "404 Not Found"))
 
