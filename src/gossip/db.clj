@@ -1,7 +1,7 @@
 (ns gossip.db
   (:require [clojure.string :as string]))
 
-(def ^:private tables #{::gossips ::insults ::comebacks})
+(def ^:private tables #{::gossips ::insults ::comebacks ::cats})
 
 (defn- db-name
   [table]
