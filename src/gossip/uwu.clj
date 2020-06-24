@@ -84,9 +84,8 @@
           words))
 
 (defn twanswate [text]
-  (as-> text it
-    (reduce translate-chars [#{} nil []] it)
-    (nth it 2)
-    (string/join it)
-    (translate-words it)
-    (affixes it)))
+  (-> (reduce translate-chars [#{} nil []] text)
+      (nth 2)
+      string/join
+      translate-words
+      affixes))
