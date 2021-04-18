@@ -43,20 +43,39 @@
 (defstate messages
   :start (load-resource "localisation"))
 
+;; TODO: what would be nice is to parse `fmt' and recognise some special
+;; syntax for handling parameters.
+;;
+;; One thing I'd like to see is
+;; { :template-key "error list: ${0:, *}" }
+;;
+;; (render [:template-key "error 1", "error 2"])
+;; => "error list: error 1, error 2"
 (defn- format-args [fmt args]
   (apply format fmt args))
 
-;; TODO: Consider making recursive to render inner messages.
-;;         * Use-case: Ranges in ::contiguous message.
 (defn render
-  [v & {locale :locale :or {locale *locale*}}]
-  (let [[key & args] (if (sequential? v) v [v])]
-    (-> messages
-        (get locale)
-        (get key)
-        (some-> (format-args args)))))
+  "Render a `message' in a given `locale'.
 
-(defn render-join
-  [msgs & {:keys [locale separator] :or {locale *locale*, separator " "}}]
-  (string/join separator
-               (map #(render % :locale locale) msgs)))
+  Message for rendering must be provided as a vector with its first element
+  being a namespaced keyword referencing the desired message template and the
+  remainder being the parameters to this template. Each parameter is rendered
+  recursively.
+
+  Parameters that do not match the expected format or do not resolve to a
+  defined message are rendered as is.
+
+  Example:
+  ;; :app/greeting is mapped to \"Hello, %s!\"
+  (render ::intl/en_GB [:app/greeting \"John\"])"
+  ([message] (render *locale* message))
+  ([locale message]
+   (if (and (vector? message)
+            (keyword? (first message)))
+     (let [[key & args] message]
+       (-> messages
+           (get locale)
+           (get key)
+           (some-> (format-args (mapv #(render locale %) args)))
+           (or message)))
+     message)))

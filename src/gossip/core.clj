@@ -18,18 +18,17 @@
 ;; 2. [WIP] Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
 ;;
 
-;; Route handlers
-
-(def comeback-index (atom 0))
+;;; Route handlers
 
 (defn gossip-add
   [req]
   (let [template (u/from-query req)]
     (if-let [errors (seq (template/check-errors template))]
       (u/response
-       (str (intl/render :gossip.generic/errors)
+       (str (intl/render [:gossip.generic/errors])
             ": "
-            (intl/render-join errors)))
+            (string/join " "
+                         (mapv intl/render errors))))
       (do
         (db/insert ::db/gossips template)
         (u/response "Gossip saved.")))))
@@ -40,21 +39,32 @@
    (-> (u/from-query req)
        uwu/twanswate)))
 
+;; Used by `rng' to store the latest index generated.
+;; This index then used by `reply-from' to reply with an appropriate response.
+(def rng-index (atom {}))
+
 (defn rng
   "Helper that returns random element of the resource and populates template vars."
-  ([table] (rng table (constantly 1)))
-  ([table action]
+  [table]
    (fn [req]
      (let [m (u/from-query* req)
            c (u/count-if #(-> % (string/starts-with? "r:") not)
-                         (vals m))]
+                         (vals (dissoc m :uwu)))]
        (u/response
          (-> table
              (db/random-with-idx :filter-by #(>= (template/greatest %) c))
              (as-> [idx tmpl]
                (do
-                 (action idx tmpl)
-                 (template/populate tmpl m)))))))))
+                 (swap! rng-index #(assoc % table idx))
+                 (template/populate tmpl m)))
+             (u/apply-if (contains? m :uwu) uwu/twanswate))))))
+
+(defn reply-from
+  [table & {idx-source :using-rng}]
+  (fn [_req]
+    (u/response
+     (-> (db/all table)
+         (nth (idx-source @rng-index 0))))))
 
 (defn all
   "Helper that implements `list' operation on a resource."
@@ -64,21 +74,15 @@
      (->> (db/all table)
           (string/join "\n")))))
 
-(defn comeback-reply
-  [req]
-  (u/response
-    (-> (db/all ::db/comebacks)
-        (nth @comeback-index))))
-
 (defroutes app
   (GET "/gossip" [] (all ::db/gossips))
   (GET "/gossip/rng" [] (rng ::db/gossips))
   (GET "/gossip/add" [] gossip-add)
   (GET "/insult" [] (all ::db/insults))
-  (GET "/insult/rng" [] (rng ::db/insults (fn [idx _] (swap! comeback-index (constantly idx)))))
+  (GET "/insult/rng" [] (rng ::db/insults))
   (GET "/comeback" [] (all ::db/comebacks))
   (GET "/comeback/rng" [] (rng ::db/comebacks))
-  (GET "/comeback/rep" [] comeback-reply)
+  (GET "/comeback/rep" [] (reply-from ::db/comebacks :using-rng ::db/insults))
   (GET "/cats" [] (all ::db/cats))
   (GET "/cats/rng" [] (rng ::db/cats))
   (GET "/uwu" [] uwu)

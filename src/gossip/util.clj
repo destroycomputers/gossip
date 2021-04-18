@@ -28,12 +28,16 @@
 
 (defn from-query
   "Retrieves a single value from ?key=value query-string."
-  [req]
-  (-> (:query-string req)
-      (some-> (string/split #"=" 2)
-              second)
-      (or "")
-      codec/url-decode))
+  ([req] (from-query req nil))
+  ([req key]
+   (some-> (:query-string req)
+           (string/split #"=" 2)
+           (as-> [k v]
+               (if (or (nil? key)
+                       (= key (keyword k)))
+                 v
+                 nil))
+           codec/url-decode)))
 
 (s/def ::query-string string?)
 (s/def ::request
@@ -48,7 +52,7 @@
 (defn from-query*
   "Retrieves a map of {key value} from ?key=value&key=value query-string."
   [req]
-  (letfn [(val-decode [[k v]] [k (codec/url-decode v)])]
+  (letfn [(val-decode [[k v]] [k (and v (codec/url-decode v))])]
     (-> (:query-string req)
         (some-> (string/split #"&")
                 (->> (into {} (comp (map #(string/split % #"="))
@@ -115,3 +119,8 @@
   [uri]
   (-> (. uri getRawPath)
       (string/split #"/")))
+
+
+(defmacro apply-if
+  [v p f]
+  `(if ~p (~f ~v) ~v))

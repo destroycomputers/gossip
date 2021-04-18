@@ -7,9 +7,12 @@
     (is (= "value" (u/from-query {:query-string "q=value"}))))
   (testing "inputs with several parameters are parsed as single value."
     (is (= "value&k=v" (u/from-query {:query-string "q=value&k=v"}))))
-  (testing "nil inputs return empty string."
-    (is (= "" (u/from-query {})))
-    (is (= "" (u/from-query nil))))
+  (testing "nil inputs return nil."
+    (is (= nil (u/from-query {})))
+    (is (= nil (u/from-query nil))))
+  (testing "only values of inputs with matching key are returned"
+    (is (= "value" (u/from-query {:query-string "q=value"} :q)))
+    (is (= nil (u/from-query {:query-string "q=value"} :unknown))))
   (testing "inputs are decoded."
     (is (= "v v" (u/from-query {:query-string "q=v%20v"})))))
 
