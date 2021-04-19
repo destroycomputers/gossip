@@ -1,15 +1,15 @@
 (ns gossip.core
   (:require [clojure.string :as string]
-            [org.httpkit.server :refer [run-server]]
             [compojure.core :refer [defroutes routes GET]]
             [compojure.route :as r]
-            [ring.util.response :as resp]
-            [mount.core :as m :refer [defstate]]
-            [gossip.intl :as intl]
-            [gossip.util :as u]
-            [gossip.template :as template]
             [gossip.db :as db]
-            [gossip.uwu :as uwu])
+            [gossip.intl :as intl]
+            [gossip.template :as template]
+            [gossip.util :as u]
+            [gossip.uwu :as uwu]
+            [mount.core :as m :refer [defstate]]
+            [org.httpkit.server :refer [run-server]]
+            [ring.util.response :as resp])
   (:gen-class))
 
 ;;
@@ -116,9 +116,13 @@
       (localise locale)
       (run-server {:port port})))
 
+(def ^:dynamic *listen-port* (or (some-> (System/getenv "PORT")
+                                         (Integer/parseInt))
+                                 8080))
+
 (declare server-stop)
 (defstate server-stop
-  :start (run-app 80 ::intl/en_GB)
+  :start (run-app *listen-port* ::intl/en_GB)
   :stop (server-stop))
 
 ;; Main entry point.
