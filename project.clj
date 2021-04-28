@@ -8,6 +8,7 @@
                  [javax.servlet/servlet-api "2.5"]
                  [mount "0.1.16"]
                  [org.clojure/clojure "1.10.2-alpha1"]
+                 [org.clojure/tools.cli "1.0.206"]
                  [ring/ring-codec "1.1.2"]]
   :main ^:skip-aot gossip.core
   :target-path "target/%s"

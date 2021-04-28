@@ -1,5 +1,6 @@
 (ns gossip.core
   (:require [clojure.string :as string]
+            [clojure.tools.cli :refer [parse-opts]]
             [compojure.core :refer [defroutes routes GET]]
             [compojure.route :as r]
             [gossip.db :as db]
@@ -111,21 +112,52 @@
 (defn run-app
   "Runs the application server at a given port."
   [port locale]
+  (println "Listening on" port)
   (-> (routes app)
       (handle-5xx)
       (localise locale)
-      (run-server {:port port})))
+      (run-server port)))
 
-(def ^:dynamic *listen-port* (or (some-> (System/getenv "PORT")
-                                         (Integer/parseInt))
-                                 8080))
+(defn app-port
+  []
+  (or (:port (m/args))
+      (some-> "PORT" System/getenv Integer/parseInt)
+      8080))
 
 (declare server-stop)
 (defstate server-stop
-  :start (run-app *listen-port* ::intl/en_GB)
+  :start (run-app (app-port) ::intl/en_GB)
   :stop (server-stop))
+
+(def options
+  [["-p" "--port PORT" "Port to listen on. If unspecified, will also be looked up in the PORT env variable."
+    :default nil
+    :default-desc "8080"
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 0 % 65536) "Must be a number between 0 and 65536"]]
+   ["-h" "--help" "Print this message."]])
+
+(defn usage
+  ([summary] (usage summary nil))
+  ([summary errors]
+   (let [errors (some->> errors
+                         (map #(format "  - %s" %))
+                         (cons "\nERRORS:"))]
+     (->> (concat ["USAGE: gossip [FLAGS]"
+                   ""
+                   "FLAGS:"
+                   summary]
+                  errors)
+          (string/join \newline)))))
 
 ;; Main entry point.
 
-(defn -main [& _args]
-  (m/start))
+(defn -main [& args]
+  (let [opts (parse-opts args options)]
+    (cond
+      (-> opts :options :help)
+      (println (usage (:summary opts)))
+      (:errors opts)
+      (println (usage (:summary opts) (:errors opts)))
+      :else
+      (m/start-with-args (:options opts)))))
