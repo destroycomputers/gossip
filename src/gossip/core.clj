@@ -47,18 +47,18 @@
 (defn rng
   "Helper that returns random element of the resource and populates template vars."
   [table]
-   (fn [req]
-     (let [m (u/from-query* req)
-           c (u/count-if #(-> % (string/starts-with? "r:") not)
-                         (vals (dissoc m :uwu)))]
-       (u/response
-         (-> table
-             (db/random-with-idx :filter-by #(>= (template/greatest %) c))
-             (as-> [idx tmpl]
-               (do
-                 (swap! rng-index #(assoc % table idx))
-                 (template/populate tmpl m)))
-             (u/apply-if (contains? m :uwu) uwu/twanswate))))))
+  (fn [req]
+    (let [m (u/from-query* req)
+          c (u/count-if #(-> % (string/starts-with? "r:") not)
+                        (vals (dissoc m :uwu)))]
+      (u/response
+       (-> table
+           (db/random-with-idx :filter-by #(>= (template/greatest %) c))
+           (as-> [idx tmpl]
+                 (do
+                   (swap! rng-index #(assoc % table idx))
+                   (template/populate tmpl m)))
+           (u/apply-if (contains? m :uwu) uwu/twanswate))))))
 
 (defn reply-from
   [table & {idx-source :using-rng}]
@@ -116,7 +116,7 @@
   (-> (routes app)
       (handle-5xx)
       (localise locale)
-      (run-server port)))
+      (run-server {:port port})))
 
 (defn app-port
   []
