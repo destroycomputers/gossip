@@ -39,11 +39,10 @@
   [name]
   (apply merge-with merge (from-resource-dir name)))
 
-(declare messages)
 (defstate messages
   :start (load-resource "localisation"))
 
-;; TODO: what would be nice is to parse `fmt' and recognise some special
+;; TODO: what would be nice is to parse `fmt` and recognise some special
 ;; syntax for handling parameters.
 ;;
 ;; One thing I'd like to see is
@@ -55,7 +54,7 @@
   (apply format fmt args))
 
 (defn render
-  "Render a `message' in a given `locale'.
+  "Render a `message` in a given `locale`.
 
   Message for rendering must be provided as a vector with its first element
   being a namespaced keyword referencing the desired message template and the

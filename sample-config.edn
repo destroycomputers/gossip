@@ -1,0 +1,2 @@
+{:streamelements {:id "1aa"
+                  :commands [{:endpoint "/insult" :prefix "insult"}]}}

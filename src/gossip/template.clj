@@ -2,8 +2,8 @@
   (:require [clojure.string :as string]))
 
 (def ^:private param-rx #"\$\{([-+]?\d+)\}")
-
-(declare select-params)
+(def ^:private expr-curly-rx #"\$\{([a-z.]+)(\s+[^}]*)?\}")
+(def ^:private expr-round-rx #"\$\(([a-z.]+)(\s+[^)]*)?\)")
 
 (defn- user-provider
   [m k]
@@ -16,12 +16,51 @@
                 (str "@" name))))
     ""))
 
+(def ^:private funs
+  {"random.pick" (fn [ctx & args] (rand-nth args))
+   "user"   (fn [ctx] (user-provider (:user-map ctx) :0))
+   "touser" (fn [ctx] (user-provider (:user-map ctx) :0))
+   "sender" (fn [ctx] (user-provider (:user-map ctx) :1))})
+
+(defn- lookup
+  [fun]
+  (funs fun (fn [& args])))
+
+(defn- select-params [template]
+  (->> template
+       (re-seq param-rx)
+       (map last)
+       (map #(Long/parseLong %))
+       (into (sorted-set))))
+
+(defn- unquote-str
+  [s]
+  (-> s
+      (string/replace #"^\"(.*)\"$" "$1")
+      (string/replace #"^'(.*)'$" "$1")))
+
+(defn- try-eval-expr
+  [ctx [m fun args]]
+  (or (apply (lookup fun)
+             ctx
+             (->> (string/split (or args "") #"\s+")
+                  (filter (comp not string/blank?))
+                  (mapv unquote-str)))
+      m))
+
+(defn- eval-exprs
+  [ctx template]
+  (-> template
+      (string/replace expr-curly-rx #(try-eval-expr ctx %))
+      (string/replace expr-round-rx #(try-eval-expr ctx %))))
+
 (defn populate
   "Populates placeholders with user names from a supplied map."
   [template m]
-    (string/replace template
-                    param-rx
-                    #(->> % second keyword (user-provider m))))
+  (->> (string/replace template
+                       param-rx
+                       #(->> % second keyword (user-provider m)))
+       (eval-exprs {:user-map m})))
 
 (defn- v:analyse
   [ps]
@@ -67,12 +106,7 @@
          (apply vs)
          (filter some?))))
 
-(defn- select-params [template]
-  (->> template
-       (re-seq param-rx)
-       (map last)
-       (map #(Long/parseLong %))
-       (into (sorted-set))))
+
 
 (defn greatest
   "Finds the greatest parameter value of this template."

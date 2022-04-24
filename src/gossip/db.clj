@@ -1,7 +1,24 @@
 (ns gossip.db
-  (:require [clojure.string :as string]))
+  (:require [clojure.edn :as edn]
+            [clojure.string :as string]
+            [mount.core :refer [defstate]]))
 
 (def ^:private tables #{::gossips ::insults ::comebacks ::cats})
+
+(def ^:private ^:const +db-storage-file+ "db.edn")
+
+(defn- persist
+  [state]
+  (spit +db-storage-file+ state))
+
+(defn- restore
+  []
+  (->> (slurp +db-storage-file+)
+       (edn/read-string)))
+
+(defstate memory-storage
+  :start (atom (restore))
+  :stop  (persist @memory-storage))
 
 (defn- db-name
   [table]
@@ -14,9 +31,24 @@
 (defn all
   "Returns all templates from the DB."
   [table]
-  (-> (db-name table)
-      slurp
-      string/split-lines))
+  (table @memory-storage))
+
+(defn insert
+  "Inserts a single row into a DB."
+  [table template]
+  (-> (swap! memory-storage update table conj template)
+      (persist)))
+
+(defn replace
+  "Replaces the given table with the news set of values"
+  [table templates]
+  (-> (swap! memory-storage assoc table templates)
+      (persist)))
+
+(defn delete
+  [table]
+  (-> (swap! memory-storage dissoc table)
+      (persist)))
 
 (defn- store
   "Stores provided templates to a DB replacing current content."
@@ -54,12 +86,5 @@
     (-> (filterv filter-by rows)
         (as-> vs (if (empty? vs) rows vs))
         (as-> vs
-          (let [idx (-> vs count rand-int)]
-            [idx (nth vs idx)])))))
-
-(defn insert
-  "Inserts a single row into a DB."
-  [table template]
-  (-> (all table)
-      (conj template)
-      (->> (store table))))
+              (let [idx (-> vs count rand-int)]
+                [idx (nth vs idx)])))))
