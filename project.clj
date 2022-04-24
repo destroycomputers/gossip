@@ -3,6 +3,14 @@
   :url "https://github.com/destroycomputers/gossip"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
+  :plugins [[io.taylorwood/lein-native-image "0.3.1"]]
+  :native-image {:name "gossip"
+                 :opts ["--initialize-at-build-time=gossip,clojure,instaparse,mount,com,org,medley,cheshire,compojure,ring,clout"
+                        "--enable-https"
+                        "--allow-incomplete-classpath"
+                        "--no-fallback"
+                        "-H:+ReportExceptionStackTraces"
+                        "--report-unsupported-elements-at-runtime"]}
   :dependencies [[cheshire "5.10.2"]
                  [compojure "1.6.1"]
                  [http-kit "2.6.0-alpha1"]

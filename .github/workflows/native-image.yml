@@ -29,15 +29,10 @@ jobs:
     - name: Compile UberJAR
       run: |
         lein deps
-        lein uberjar
-
-    - name: Compile Native Image
-      run: |
-        cd target/uberjar
-        native-image --initialize-at-build-time=gossip,clojure,instaparse,mount,com,org,medley,cheshire,compojure,ring,clout --enable-https --allow-incomplete-classpath --no-fallback -H:+ReportExceptionStackTraces --report-unsupported-elements-at-runtime -jar ./gossip-0.1.0-SNAPSHOT-standalone.jar
+        lein native-image
 
     - name: Uploading the artifact
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: Gossip Native Image
-        path: target/uberjar/gossip-0.1.0-SNAPSHOT-standalone
+        name: gossip-binary
+        path: target/default+uberjar/gossip
