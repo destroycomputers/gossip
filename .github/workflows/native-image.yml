@@ -34,7 +34,7 @@ jobs:
     - name: Compile Native Image
       run: |
         cd target/uberjar
-        native-image --initialize-at-build-time=gossip,clojure --initialize-at-run-time=instaparse --enable-https --allow-incomplete-classpath --no-fallback -H:+ReportExceptionStackTraces --report-unsupported-elements-at-runtime -jar ./gossip-0.1.0-SNAPSHOT-standalone.jar
+        native-image --initialize-at-build-time=gossip --enable-https --allow-incomplete-classpath --no-fallback -H:+ReportExceptionStackTraces --report-unsupported-elements-at-runtime -jar ./gossip-0.1.0-SNAPSHOT-standalone.jar
 
     - name: Uploading the artifact
       uses: actions/upload-artifact@v1.0.0
