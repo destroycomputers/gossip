@@ -22,7 +22,7 @@
 
 (defn- group-by-entities
   [cmds prefix]
-  (let [pattern (re-pattern (str "^" prefix "(\\w+?)(?:\\d+)?$"))]
+  (let [pattern (re-pattern (str "^" prefix "([a-z]+?)(?:\\d+)?$"))]
     (->> cmds
          (map #(some->> (:command %)
                         (re-find pattern)
