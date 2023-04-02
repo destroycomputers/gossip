@@ -13,7 +13,7 @@
                         "--report-unsupported-elements-at-runtime"]}
   :dependencies [[cheshire "5.10.2"]
                  [compojure "1.6.1"]
-                 [http-kit "2.6.0-alpha1"]
+                 [http-kit "2.6.0"]
                  [javax.servlet/servlet-api "2.5"]
                  [mount "0.1.16"]
                  [org.clojure/clojure "1.11.0"]

@@ -1,2 +1,4 @@
 {:streamelements {:id "1aa"
-                  :commands [{:endpoint "/insult" :prefix "insult"}]}}
+                  :commands [{:endpoint "/insult" :prefix "insult"}]}
+ :openai {:api-key "API-key"
+          :system-prompt "You are a chef."}}

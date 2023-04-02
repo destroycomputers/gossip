@@ -7,6 +7,7 @@
             [compojure.route :as r]
             [gossip.db :as db]
             [gossip.intl :as intl]
+            [gossip.openai :as openai]
             [gossip.streamelements :as se]
             [gossip.template :as template]
             [gossip.util :as u]
@@ -20,8 +21,9 @@
 ;; TODO
 ;; 1. [WIP] Add tests/specs.
 ;; 2. [WIP] Insults from https://monkeyisland.fandom.com/wiki/Insult_Sword_Fighting.
-;; 3. Get insults from streamelements website.
 ;;
+
+(declare app-config)
 
 ;;; Route handlers
 
@@ -44,8 +46,18 @@
    (-> (u/from-query req)
        uwu/twanswate)))
 
+(defn pizza
+  [cfg]
+  (fn [req]
+    (binding [openai/system-prompt (-> cfg :system-prompt)
+              openai/api-key (-> cfg :api-key)]
+      (let [m (u/from-query* req)]
+        (u/response (openai/generate-response m))))))
+
 ;; Used by `rng` to store the latest index generated.
 ;; This index then used by `reply-from` to reply with an appropriate response.
+
+
 (def rng-index (atom {}))
 
 (defn rng
@@ -88,7 +100,8 @@
   (GET "/comeback" [] (all ::db/comebacks))
   (GET "/comeback/rng" [] (rng ::db/comebacks))
   (GET "/comeback/rep" [] (reply-from ::db/comebacks :using-rng ::db/taunts))
-  (GET "/uwu" [] uwu))
+  (GET "/uwu" [] uwu)
+  (GET "/pizza" [] (pizza (app-config :openai))))
 
 (defn localise
   "Localisation middleware, sets up given locale as a locale of the request."
