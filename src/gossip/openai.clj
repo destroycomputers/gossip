@@ -1,5 +1,6 @@
 (ns gossip.openai
   (:require [cheshire.core :as json]
+            [clojure.string :as string]
             [clojure.walk :as walk]
             [gossip.util :as u]
             [org.httpkit.client :as http]
@@ -59,14 +60,15 @@
 
 (defn generate-response
   [{:keys [prefs user source]}]
-  (if (some? prefs)
-    (chat-complete-with-memory (format "%s asks for a pizza recommendation. They add \"%s\"."
-                                       user
-                                       prefs)
-                               source)
-    (chat-complete-with-memory (format "%s asks for a pizza recommendation."
-                                       user)
-                               source)))
+  (let [prefs (string/replace-first prefs #"^!\w+" "")]
+    (if (not (empty? prefs))
+      (chat-complete-with-memory (format "%s asks for a pizza recommendation. They add \"%s\"."
+                                         user
+                                         prefs)
+                                 source)
+      (chat-complete-with-memory (format "%s asks for a pizza recommendation."
+                                         user)
+                                 source))))
 
 (defn image [description]
   (-> (http/post "https://api.openai.com/v1/images/generations"
