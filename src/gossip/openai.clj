@@ -60,7 +60,7 @@
 
 (defn generate-response
   [{:keys [prefs user source]}]
-  (let [prefs (string/replace-first prefs #"^!\w+" "")]
+  (let [prefs (string/replace-first (str prefs) #"^!\w+" "")]
     (if (not (empty? prefs))
       (chat-complete-with-memory (format "%s asks for a pizza recommendation. They add \"%s\"."
                                          user
