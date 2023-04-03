@@ -62,11 +62,13 @@
   [{:keys [prefs user source]}]
   (let [prefs (string/replace-first (str prefs) #"^!\w+" "")]
     (if (not (empty? prefs))
-      (chat-complete-with-memory (format "%s asks for a pizza recommendation. They add \"%s\"."
+      (chat-complete-with-memory (format "Customer called %s comes to Luigi. %s: Recommend me a pizza %s. Luigi:"
+                                         user
                                          user
                                          prefs)
                                  source)
-      (chat-complete-with-memory (format "%s asks for a pizza recommendation."
+      (chat-complete-with-memory (format "Customer called %s comes to Luigi. %s: Recommend me a pizza. Luigi:"
+                                         user
                                          user)
                                  source))))
 
