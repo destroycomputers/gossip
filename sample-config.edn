@@ -1,4 +1,5 @@
 {:streamelements {:id "1aa"
                   :commands [{:endpoint "/insult" :prefix "insult"}]}
  :openai {:api-key "API-key"
-          :system-prompt "You are a chef."}}
+          :system-prompt "You are a chef."
+          :model-name "gpt-3.5-turbo"}}

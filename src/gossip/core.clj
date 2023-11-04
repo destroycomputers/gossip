@@ -50,6 +50,7 @@
   [cfg]
   (fn [req]
     (binding [openai/system-prompt (-> cfg :system-prompt)
+              openai/model-name (-> cfg :model-name)
               openai/api-key (-> cfg :api-key)]
       (let [m (u/from-query* req)]
         (u/response (openai/generate-response m))))))

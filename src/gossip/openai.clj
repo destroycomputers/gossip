@@ -8,6 +8,7 @@
 
 (def ^:dynamic system-prompt nil)
 (def ^:dynamic api-key nil)
+(def ^:dynamic model-name "gpt-3.5-turbo")
 
 (def ^:private interactions (atom []))
 
@@ -31,7 +32,7 @@
   (-> (http/post "https://api.openai.com/v1/chat/completions"
                  {:headers {"Content-Type" "application/json"}
                   :oauth-token api-key
-                  :body (json/encode {:model "gpt-3.5-turbo"
+                  :body (json/encode {:model model-name
                                       :messages (conj (reduce conj [{:role "system" :content system-prompt}] context)
                                                       {:role "user" :content text})
 
@@ -45,32 +46,25 @@
 (defn chat-complete-with-memory
   [text source]
   (let* [response (chat-complete text @interactions source)
-         message (-> response :choices first :message)]
-        (if (or (nil? (:role message))
-                (nil? (:content message)))
-          " > Luigi tripped and couldn't reply"
-          (do (swap! interactions #(vec (if (> (count %) 40)
-                                          (drop 2 (conj %
-                                                        {:role "user" :content text}
-                                                        {:role (:role message) :content (:content message)}))
-                                          (conj %
-                                                {:role "user" :content text}
-                                                {:role (:role message) :content (:content message)}))))
-              (:content message)))))
+         message (-> (:choices response) first :message)]
+    (if (or (nil? (:role message))
+            (nil? (:content message)))
+      " > Luigi tripped and couldn't reply"
+      (do (swap! interactions #(vec (if (> (count %) 40)
+                                      (drop 2 (conj %
+                                                    {:role "user" :content text}
+                                                    {:role (:role message) :content (:content message)}))
+                                      (conj %
+                                            {:role "user" :content text}
+                                            {:role (:role message) :content (:content message)}))))
+          (:content message)))))
 
 (defn generate-response
   [{:keys [prefs user source]}]
   (let [prefs (string/replace-first (str prefs) #"^!\w+" "")]
-    (if (not (empty? prefs))
-      (chat-complete-with-memory (format "Customer called %s comes to Luigi. %s: Recommend me a pizza %s. Luigi:"
-                                         user
-                                         user
-                                         prefs)
-                                 source)
-      (chat-complete-with-memory (format "Customer called %s comes to Luigi. %s: Recommend me a pizza. Luigi:"
-                                         user
-                                         user)
-                                 source))))
+    (chat-complete-with-memory (format "Customer named %1$s comes to Luigi. %1$s: Recommend me a pizza %2$s. Luigi:"
+                                       user prefs)
+                               source)))
 
 (defn image [description]
   (-> (http/post "https://api.openai.com/v1/images/generations"
