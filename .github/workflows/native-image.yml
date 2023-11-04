@@ -20,11 +20,10 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
-    - uses: ayltai/setup-graalvm@v1
+    - uses: graalvm/setup-graalvm@v1
       with:
-        java-version: 11
-        graalvm-version: 22.0.0.2
-        native-image: true
+        java-version: '17'
+        distribution: 'graalvm'
 
     - name: Compile UberJAR
       run: |
