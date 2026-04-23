@@ -27,7 +27,7 @@ jobs:
         github-token: '${{ secrets.GITHUB_TOKEN }}'
 
     - name: Install Leiningen
-      run: apt install -y leiningen
+      run: sudo apt-get install -y leiningen
 
     - name: Compile UberJAR
       run: |
