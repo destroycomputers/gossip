@@ -57,7 +57,7 @@
       (refresh-commands id prefixes)
       (catch Exception e
         (printf "Failed to refresh commands: %s" e)))
-    (Thread/sleep (* 1000 delay))
+    (Thread/sleep (long (* 1000 delay)))
     (recur)))
 
 (defn spawn-service
