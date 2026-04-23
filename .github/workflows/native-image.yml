@@ -22,8 +22,9 @@ jobs:
 
     - uses: graalvm/setup-graalvm@v1
       with:
-        java-version: '17'
+        java-version: '25'
         distribution: 'graalvm'
+        github-token: '${{ secrets.GITHUB_TOKEN }}'
 
     - name: Compile UberJAR
       run: |
@@ -31,7 +32,7 @@ jobs:
         lein native-image
 
     - name: Uploading the artifact
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: gossip-binary
         path: target/uberjar/gossip
