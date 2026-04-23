@@ -10,11 +10,13 @@
   (testing "nil inputs return nil."
     (is (= nil (u/from-query {})))
     (is (= nil (u/from-query nil))))
-  (testing "only values of inputs with matching key are returned"
+  (testing "only values of inputs with matching key are returned."
     (is (= "value" (u/from-query {:query-string "q=value"} :q)))
     (is (= nil (u/from-query {:query-string "q=value"} :unknown))))
   (testing "inputs are decoded."
-    (is (= "v v" (u/from-query {:query-string "q=v%20v"})))))
+    (is (= "v v" (u/from-query {:query-string "q=v%20v"}))))
+  (testing "spaces-as-pluses are handled properly."
+    (is (= "v v" (u/from-query {:query-string "q=v+v"})))))
 
 (deftest from-query*
   (testing "simple inputs parsed correctly."

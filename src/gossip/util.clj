@@ -37,7 +37,7 @@
                        (= key (keyword k)))
                  v
                  nil))
-           codec/url-decode)))
+           codec/form-decode-str)))
 
 (s/def ::query-string string?)
 (s/def ::request
@@ -52,7 +52,7 @@
 (defn from-query*
   "Retrieves a map of {key value} from ?key=value&key=value query-string."
   [req]
-  (letfn [(val-decode [[k v]] [k (and v (codec/url-decode v))])]
+  (letfn [(val-decode [[k v]] [k (and v (codec/form-decode-str v))])]
     (-> (:query-string req)
         (some-> (string/split #"&")
                 (->> (into {} (comp (map #(string/split % #"="))
