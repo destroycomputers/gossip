@@ -26,6 +26,9 @@ jobs:
         distribution: 'graalvm'
         github-token: '${{ secrets.GITHUB_TOKEN }}'
 
+    - name: Install Leiningen
+      run: apt install -y leiningen
+
     - name: Compile UberJAR
       run: |
         lein deps
